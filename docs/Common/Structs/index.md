@@ -299,13 +299,16 @@
 
 |Name|Type|Mandatory|Additional|Description|
 |:---|:---|:--------|:---------|:----------|
-|parkBrakeActive|Boolean|true|||
-|ignitionStableStatus|[Common.IgnitionStableStatus](../enums/#ignitionstablestatus)|true|||
-|ignitionStatus|[Common.IgnitionStatus](../enums/#ignitionstatus)|true|||
-|driverDoorAjar|Boolean|false|||
-|passengerDoorAjar|Boolean|false|||
-|rearLeftDoorAjar|Boolean|false|||
-|rearRightDoorAjar|Boolean|false|||
+|parkBrakeActive|Boolean|true||If mechanical park brake is active, true. Otherwise false.|
+|ignitionStableStatus|[Common.IgnitionStableStatus](../enums/#ignitionstablestatus)|true||Provides information on status of ignition stable switch. See IgnitionStableStatus.|
+|ignitionStatus|[Common.IgnitionStatus](../enums/#ignitionstatus)|true||Provides information on current ignitiion status. See IgnitionStatus.|
+|driverDoorAjar|Boolean|false||References signal "DrStatDrv_B_Actl". Deprecated starting with RPC Spec 7.1.0|
+|passengerDoorAjar|Boolean|false||References signal "DrStatPsngr_B_Actl". Deprecated starting with RPC Spec 7.1.0|
+|rearLeftDoorAjar|Boolean|false||References signal "DrStatRl_B_Actl". Deprecated starting with RPC Spec 7.1.0|
+|rearRightDoorAjar|Boolean|false||References signal "DrStatRr_B_Actl". Deprecated starting with RPC Spec 7.1.0|
+|doorStatuses|Common.DoorStatus|false|array: true<br>minsize: 0<br>maxsize: 100|Provides status for doors if Ajar/Closed/Locked|
+|gateStatuses|Common.GateStatus|false|array: true<br>minsize: 0<br>maxsize: 100|Provides status for trunk/hood/etc. if Ajar/Closed/Locked|
+|roofStatuses|Common.RoofStatus|false|array: true<br>minsize: 0<br>maxsize: 100|Provides status for roof/convertible roof/sunroof/moonroof etc., if Closed/Ajar/Removed etc.|
 
 ### BeltStatus
 
@@ -1179,3 +1182,39 @@ There are no defined parameters for this struct
 |:---|:---|:--------|:---------|:----------|
 |location|Common.Grid|true|||
 |state|Common.WindowState|true|||
+
+### DoorStatus
+
+|Name|Type|Mandatory|Additional|Description|
+|:---|:---|:--------|:---------|:----------|
+|location|Common.Grid|true||Describes the status of a location of a door.|
+|status|[Common.DoorStatusType](../enums/#doorstatustype)|true||Describes the status of a door.|
+
+### GateStatus
+
+|Name|Type|Mandatory|Additional|Description|
+|:---|:---|:--------|:---------|:----------|
+|location|Common.Grid|true||Describes the status of location of trunk/hood/etc.|
+|status|[Common.DoorStatusType](../enums/#doorstatustype)|true||Describes the status of trunk/hood/etc.|
+
+### RoofStatus
+
+|Name|Type|Mandatory|Additional|Description|
+|:---|:---|:--------|:---------|:----------|
+|location|Common.Grid|true||Describes the status of a parameter of roof, convertible roof, sunroof/moonroof etc.<br>If roof is open (AJAR), state will determine percentage of roof open.|
+|status|[Common.DoorStatusType](../enums/#doorstatustype)|true||Describes the status of a parameter of roof, convertible roof, sunroof/moonroof etc.<br>If roof is open (AJAR), state will determine percentage of roof open.|
+|state|Common.WindowState|false||Describes the status of a parameter of roof, convertible roof, sunroof/moonroof etc.<br>If roof is open (AJAR), state will determine percentage of roof open.|
+
+#### Roof `status` selection:
+* Convertible roof - `location` grid would span entire rows and columns and roof `status` could be `CLOSED` or `AJAR` with corresponding `state`. 
+* Sunroof/Moonroof - `location` grid would span just actual location of sunroof/moonroof. `status` could be `CLOSED` or `AJAR` with corresponding `state`.
+* Entire roof - `location` grid would span entire rows and columns and roof status would be `REMOVED` or `CLOSED/LOCKED`. `state` can be omitted.
+* Other type of roof - `location` grid would span actual location of the roof as per physical location. `status` and `state` would be as per table below:
+
+| Roof condition  | `status` | `state` |
+| ------------- | ------------- | ------------- |
+| Roof is closed and locked  | LOCKED  | `approximatePosition` = 0 & `deviation` = 0 |
+| Roof is closed and unlocked  | CLOSED  | `approximatePosition` = 0 & `deviation` = 0 |
+| Roof is closed and unknown locked state | CLOSED  | `approximatePosition` = 0 & `deviation` = 0 |
+| Roof is open  | AJAR  | actual values of `approximatePosition` & `deviation` |
+| Roof is physically removed  | REMOVED  | can be omitted OR `approximatePosition` = 0 & `deviation` = 0 |
